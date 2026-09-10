@@ -12,10 +12,13 @@ public class NoGoZoneScript : MonoBehaviour
     private Coroutine shakeRoutine;
     private float distanceToPlayer;
     private Vector3 originalPosition;
+    private SpriteRenderer warningAreaRenderer, lossAreaRenderer;
 
     void Start() 
     {
         playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
+        warningAreaRenderer = warningArea.GetComponent<SpriteRenderer>();
+        lossAreaRenderer = LossArea.GetComponent<SpriteRenderer>();
         warningArea.transform.localScale = new Vector3(warningDistance * 2, warningDistance * 2, 1);
         LossArea.transform.localScale = new Vector3(noGoDistance * 2, noGoDistance * 2, 1);
     }
@@ -30,11 +33,18 @@ public class NoGoZoneScript : MonoBehaviour
         }
         else if (distanceToPlayer < warningDistance)
         {
-            if (shakeRoutine == null) shakeRoutine = StartCoroutine(ShakeZone());
+            if (shakeRoutine == null)
+            {
+                lossAreaRenderer.color = Color.red;
+                warningAreaRenderer.enabled = !warningAreaRenderer.enabled;
+                shakeRoutine = StartCoroutine(ShakeZone());
+            }
         }
         else if (shakeRoutine != null)
         {
             StopCoroutine(shakeRoutine);
+            lossAreaRenderer.color = Color.white;
+            warningAreaRenderer.enabled = !warningAreaRenderer.enabled;
             shakeRoutine = null;
             warningArea.transform.localPosition = Vector3.zero;
         }
