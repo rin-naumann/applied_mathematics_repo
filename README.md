@@ -28,4 +28,4 @@ Movement must be handled manually (e.g. via Transform.position updates), not thr
 - No Rigidbody, Rigidbody2D, Unity.Physics, or physics-based trigger/collision events (OnCollisionEnter, OnTriggerEnter, etc.) may be used.
 - All detection must be done via manually in Update().
 
-[Video Submission] (https://drive.google.com/file/d/1xTJR-shRhK08HVQ_-XAxwIzo-t8_phlY/view?usp=sharing)
+[Video Submission](https://drive.google.com/file/d/1xTJR-shRhK08HVQ_-XAxwIzo-t8_phlY/view?usp=sharing)
