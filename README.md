@@ -1,31 +1,42 @@
-# ACTIVITY 1
+# Player Rocket Barrage — Spec
 
-### Assignment: Grid Movement & Proximity Detection (No Physics Engine)
+## 1. Player Movement
 
-### Objective
-Build a small scene demonstrating custom collision/proximity logic without using Unity's built-in physics (no Rigidbody, no Unity.Physics, no physics-based collision callbacks).
+Input: 4-directional (up, down, left, right)
+Movement type: Cardinal-only (no diagonals unless specified otherwise)
+Constraints: TBD (speed, acceleration, screen/world bounds)
 
-Add a video link to google drive for demonstration of the mechanics in the readme document.
+## 2. Rocket Barrage System
 
-### Requirements
+### 2.1 Trigger
+Fires automatically on a timer (every N seconds — TBD default, e.g. 3s)
+Origin point: player's current position at time of fire
 
-**Player Controller**
-Player can move Up, Down, Left, and Right using input.
-Movement must be handled manually (e.g. via Transform.position updates), not through physics forces.
+### 2.2 Rocket Spawn Pattern
+Rockets spawn in a radial burst, evenly spaced around 360°
+Spacing formula: 360 / rocketCount degrees apart
+First rocket offset: TBD (spec example starts at 45°, i.e. offset = half-spacing)
 
-**No-Go Zones**
-- Place one or more "No-Go Zones" in the scene.
-- Continuously check the distance between the Player and each No-Go Zone.
-- If the Player enters a defined proximity threshold:
--- The zone should visibly shake and change color to red (warning state).
-- If the Player gets even closer (a second, smaller threshold) or remains in the zone too long, the scene should restart.
+### Example (4 rockets):
+Rocket	Angle
+1	45°
+2	135°
+3	225°
+4	315°
 
-**Finish Zone**
-- Place a "Finish Zone" in the scene.
-- When the Player gets within a defined proximity of the Finish Zone, display a Win UI (e.g. a panel with "You Win!").
+### 2.3 Rocket Behavior
+Travel in a straight line along their assigned angle from spawn point
+Constant velocity (TBD speed value)
+Lifetime/despawn condition: TBD (off-screen, max distance, timer, or collision)
 
-**Constraints**
-- No Rigidbody, Rigidbody2D, Unity.Physics, or physics-based trigger/collision events (OnCollisionEnter, OnTriggerEnter, etc.) may be used.
-- All detection must be done via manually in Update().
+## 3. Power-Ups
 
-[Video Submission](https://drive.google.com/file/d/1xTJR-shRhK08HVQ_-XAxwIzo-t8_phlY/view?usp=sharing)
+### 3.1 Placement
+Distributed around the map (static spawn points or random — TBD)
+
+### 3.2 Effect
+On pickup: increases rocketCount by +1
+Cap: rocketCount max = 8
+Pickup beyond cap: TBD (no effect, or convert to another bonus e.g. score/health)
+
+[Video Submission](https://drive.google.com/file/d/1kZJglKgE3mODwj3okDuFHlYj48-h-P0C/view?usp=sharing)
