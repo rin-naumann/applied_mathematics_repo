@@ -1,42 +1,33 @@
-# Player Rocket Barrage — Spec
+## Objective
 
-## 1. Player Movement
+**Build a small level where the player must cross a map while avoiding fire from three turret types, then reach a goal point to win.**
 
-Input: 4-directional (up, down, left, right)
-Movement type: Cardinal-only (no diagonals unless specified otherwise)
-Constraints: TBD (speed, acceleration, screen/world bounds)
+### 1. Turrets
 
-## 2. Rocket Barrage System
+Implement three turret types, each with distinct targeting and attack behavior:
 
-### 2.1 Trigger
-Fires automatically on a timer (every N seconds — TBD default, e.g. 3s)
-Origin point: player's current position at time of fire
+- Turret Range Shape Attack
 
-### 2.2 Rocket Spawn Pattern
-Rockets spawn in a radial burst, evenly spaced around 360°
-Spacing formula: 360 / rocketCount degrees apart
-First rocket offset: TBD (spec example starts at 45°, i.e. offset = half-spacing)
+- Flame Turret Cone Continuously expels fire within its cone when the player is inside it
 
-### Example (4 rockets):
-Rocket	Angle
-1	45°
-2	135°
-3	225°
-4	315°
+- Sniper Turret Line of sight Fires a single shot when the player enters its sight line
 
-### 2.3 Rocket Behavior
-Travel in a straight line along their assigned angle from spawn point
-Constant velocity (TBD speed value)
-Lifetime/despawn condition: TBD (off-screen, max distance, timer, or collision)
+- Shotgun Turret Cone/radius (your choice) Fires a spread shotgun blast when the player is in range
 
-## 3. Power-Ups
+Each turret should only fire when the player is within its defined range/detection area.
 
-### 3.1 Placement
-Distributed around the map (static spawn points or random — TBD)
+### 2. Range Visualization
 
-### 3.2 Effect
-On pickup: increases rocketCount by +1
-Cap: rocketCount max = 8
-Pickup beyond cap: TBD (no effect, or convert to another bonus e.g. score/health)
+Add a LineRenderer to each turret that draws the outline of its range/detection shape (cone, radius, or line), so the player can see danger zones before entering them.
 
-[Video Submission](https://drive.google.com/file/d/1kZJglKgE3mODwj3okDuFHlYj48-h-P0C/view?usp=sharing)
+### 3. Player & Level Flow
+
+- Player starts at the left side of the map.
+
+- Player must navigate to a specified goal location on the right (or elsewhere), avoiding all turret projectiles along the way.
+
+- On hit: the scene restarts immediately.
+
+- On reaching the goal: all turrets stop firing, and a Win UI is displayed.
+
+[Video Submission](https://drive.google.com/file/d/1vucLTl1gRD__3P7fkkRT1q1ZoeMEX_6X/view?usp=sharing)
