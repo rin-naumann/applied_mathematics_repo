@@ -1,33 +1,37 @@
-## Objective
+### Extend your Week 3 tower defense scene by adding creature movement along Bézier paths, a ghost HP bar, a coin collection system, and basic game state UI.
 
-**Build a small level where the player must cross a map while avoiding fire from three turret types, then reach a goal point to win.**
+# Requirements
 
-### 1. Turrets
+### Scene Setup
 
-Implement three turret types, each with distinct targeting and attack behavior:
+- Add two spawn points and one shared target location in your existing scene
+- One spawn point drives quadratic Bézier movement (3 control points)
+- The other drives cubic Bézier movement (4 control points)
+- Towers from Week 3 may be pre-placed — no placement mechanic needed
+- Remove the player movement, you are now the towers and the invading creatures are the enemy.
 
-- Turret Range Shape Attack
+### Creature Movement
 
-- Flame Turret Cone Continuously expels fire within its cone when the player is inside it
+- Creatures spawn at their respective spawn points and move toward the target using Bézier Lerp (not Vector3.MoveTowards, not NavMesh)
+- Quadratic path must have a visible arc (control point offset from the straight line)
+- Cubic path must have a visible S-curve or double-arc shape
+- No physics on creatures or bullets — strictly transform-based
 
-- Sniper Turret Line of sight Fires a single shot when the player enters its sight line
+### Player HP Bar
 
-- Shotgun Turret Cone/radius (your choice) Fires a spread shotgun blast when the player is in range
+- Display a UI HP bar that reflects current HP out of 20
+- Implement a ghost HP layer: when damage is taken, the ghost bar stays momentarily then eases down to match the real HP using an easing function (ease-out recommended)
+- The real HP bar snaps immediately; the ghost bar ticks down smoothly behind it
 
-Each turret should only fire when the player is within its defined range/detection area.
+### Combat
 
-### 2. Range Visualization
+- A creature that reaches the target subtracts 1 HP from the player (starting HP: 20)
+- Turrets from Week 3 must be able to kill a creature in one hit
+- Bullets must use transform-based movement only — no Rigidbody, no physics colliders for travel
 
-Add a LineRenderer to each turret that draws the outline of its range/detection shape (cone, radius, or line), so the player can see danger zones before entering them.
+### Coin
 
-### 3. Player & Level Flow
+- When a creature dies it will spawn a coin in its location that flies towards a UI element
+- Once the coin reaches the UI element, the element will Punch up and ease towards the new value . e.g. 10 coins  to bank, bank has 100 coins. Bank : 101...108..110. final balance: 110;
 
-- Player starts at the left side of the map.
-
-- Player must navigate to a specified goal location on the right (or elsewhere), avoiding all turret projectiles along the way.
-
-- On hit: the scene restarts immediately.
-
-- On reaching the goal: all turrets stop firing, and a Win UI is displayed.
-
-[Video Submission](https://drive.google.com/file/d/1vucLTl1gRD__3P7fkkRT1q1ZoeMEX_6X/view?usp=sharing)
+[Video Submission](https://drive.google.com/file/d/1-yDmZ07NyaIb1g_m6X46CKSmsxjLbzjU/view?usp=sharing)
