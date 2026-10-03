@@ -1,20 +1,20 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
-public class ShotgunTurret : Turret
+public class ShotgunTurret : Turret, IConeTurret
 {
-    [SerializeField] private float deltaAngle = 30f;      
-    [SerializeField] private int coneSegments = 12;
+    [FormerlySerializedAs("deltaAngle")]
+    [SerializeField] private float halfAngle = 30f;
     [SerializeField] private int pelletCount = 6;
-    [SerializeField] private float pelletSpread = 25f;    
+    [SerializeField] private float pelletSpread = 25f;
+
+    public float HalfAngle => halfAngle;
 
     protected override void Update()
     {
         base.Update();
 
-        bool playerInCone = DetectInCone(deltaAngle);
-        DrawCone(shapeIndicator, deltaAngle, coneSegments);
-
-        if (!playerInCone) return;
+        if (!DetectInCone(halfAngle)) return;
 
         fireCountdown -= Time.deltaTime;
         if (fireCountdown <= 0f)
@@ -34,10 +34,7 @@ public class ShotgunTurret : Turret
         {
             float angle = (startAngle + angleStep * i) * Mathf.Deg2Rad;
             Vector3 dir = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f);
-
-            GameObject bulletObj = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
-            bulletObj.transform.right = dir;
-            bulletObj.GetComponent<Bullet>().speed = bulletSpeed;
+            bulletPool.Spawn(firePoint.position, dir, bulletSpeed);
         }
     }
 }
