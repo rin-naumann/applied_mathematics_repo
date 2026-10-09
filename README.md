@@ -1,37 +1,20 @@
-### Extend your Week 3 tower defense scene by adding creature movement along Bézier paths, a ghost HP bar, a coin collection system, and basic game state UI.
+### Player Character:
 
-# Requirements
+- Moves forward constantly in a forward direction
+- you can turn with left and right keys but it will only slightly rotate it (like an airplane)
+- Getting Hit 5 times restarts the game
+- Every Few Seconds the game spawns the ff:
 
-### Scene Setup
+### Homing missiles.
 
-- Add two spawn points and one shared target location in your existing scene
-- One spawn point drives quadratic Bézier movement (3 control points)
-- The other drives cubic Bézier movement (4 control points)
-- Towers from Week 3 may be pre-placed — no placement mechanic needed
-- Remove the player movement, you are now the towers and the invading creatures are the enemy.
+- When Spawned have a set amount of life time(e.g. after 5 seconds it destroys itself)
+- This bullet will use Look Rotation + slerp and home in on the player and destroy itself when it is close to the enemy or 5 seconds (which ever comes first).
+- Bullets should spawn outside the camera view.
 
-### Creature Movement
+### Scaling Difficulty: 
 
-- Creatures spawn at their respective spawn points and move toward the target using Bézier Lerp (not Vector3.MoveTowards, not NavMesh)
-- Quadratic path must have a visible arc (control point offset from the straight line)
-- Cubic path must have a visible S-curve or double-arc shape
-- No physics on creatures or bullets — strictly transform-based
+-For Every 10 seconds that the player survives increase the amount of missiles headed toward the player.
 
-### Player HP Bar
+### NoRigidBody/Collision/Trigger code allowed
 
-- Display a UI HP bar that reflects current HP out of 20
-- Implement a ghost HP layer: when damage is taken, the ghost bar stays momentarily then eases down to match the real HP using an easing function (ease-out recommended)
-- The real HP bar snaps immediately; the ghost bar ticks down smoothly behind it
-
-### Combat
-
-- A creature that reaches the target subtracts 1 HP from the player (starting HP: 20)
-- Turrets from Week 3 must be able to kill a creature in one hit
-- Bullets must use transform-based movement only — no Rigidbody, no physics colliders for travel
-
-### Coin
-
-- When a creature dies it will spawn a coin in its location that flies towards a UI element
-- Once the coin reaches the UI element, the element will Punch up and ease towards the new value . e.g. 10 coins  to bank, bank has 100 coins. Bank : 101...108..110. final balance: 110;
-
-[Video Submission](https://drive.google.com/file/d/1-yDmZ07NyaIb1g_m6X46CKSmsxjLbzjU/view?usp=sharing)
+[Video Submission](https://drive.google.com/file/d/1h0d_O0wIuReZP5AvI0pRbqzwNIY2fm0Y/view?usp=sharing)
