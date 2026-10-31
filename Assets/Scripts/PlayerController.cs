@@ -1,57 +1,69 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using TMPro;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour, ICollidable
 {
-    [SerializeField] private GameObject left, right;
+    [SerializeField] private float moveSpeed = 2f;
+    [SerializeField] private float jumpHeight = 3f;
+    [SerializeField] private float gravity = -9.8f;
 
-    [Header("Movement")]
-    [SerializeField] private float speed = 5f;
-    [SerializeField] private float turnSpeed = 60f;
+    private float velocityY = 0f;
+    private bool isGrounded = false;
 
-    [Header("Health")]
-    public int maxHits = 5;
-    private int hits = 0;
-    public float TimeAlive { get; private set; }
+    public AABBCollider Collider { get; private set; }
 
-    [Header("UI")]
-    [SerializeField] private TextMeshProUGUI hitsText;
-    [SerializeField] private TextMeshProUGUI timeText;
-
-    void Start() => hitsText.text = $"Hits: {hits} / {maxHits}";
+    void Awake() => Collider = GetComponent<AABBCollider>();
+    void OnEnable() => CollisionManager.Register(this);
+    void OnDisable() => CollisionManager.Unregister(this);
 
     void Update()
     {
-        TimeAlive += Time.deltaTime;
-        timeText.text = $"Time: {TimeAlive:F1}s";
-        float input = Input.GetAxisRaw("Horizontal");
+        float horizontalInput = Input.GetAxisRaw("Horizontal");
+        transform.position += new Vector3(horizontalInput * moveSpeed * Time.deltaTime, 0f, 0f);
 
-        transform.position += transform.up * speed * Time.deltaTime;
-        Steer(input);
-        SteerIndicator(input);
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+            velocityY = Mathf.Sqrt(jumpHeight * -2f * gravity);
+
+        velocityY += gravity * Time.deltaTime;
+        transform.position += new Vector3(0f, velocityY * Time.deltaTime, 0f);
+
+        isGrounded = false;
     }
 
-    void Steer(float input)
+    public void OnColliderEnter(ICollidable other)
     {
+        if (other is not SolidObject) return;
 
-        Quaternion turn = Quaternion.AngleAxis(-input * turnSpeed * Time.deltaTime, Vector3.forward);
-        transform.rotation = turn * transform.rotation;
-    }
+        AABBCollider player = Collider;
+        AABBCollider otherCollider = other.Collider;
 
-    void SteerIndicator(float input)
-    {
-        left.SetActive(input < 0);
-        right.SetActive(input > 0);
-    }
+        float overlapX = Mathf.Min(player.max.x, otherCollider.max.x) - Mathf.Max(player.min.x, otherCollider.min.x);
+        float overlapY = Mathf.Min(player.max.y, otherCollider.max.y) - Mathf.Max(player.min.y, otherCollider.min.y);
 
-    public void TakeHit()
-    {
-        hits++;
-        hitsText.text = $"Hits: {hits} / {maxHits}";
-        if (hits >= maxHits)
+        float myCenterX = (player.min.x + player.max.x) * 0.5f;
+        float myCenterY = (player.min.y + player.max.y) * 0.5f;
+        float theirCenterX = (otherCollider.min.x + otherCollider.max.x) * 0.5f;
+        float theirCenterY = (otherCollider.min.y + otherCollider.max.y) * 0.5f;
+
+        if (overlapY < overlapX)
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            if (myCenterY > theirCenterY)
+            {
+                transform.position += new Vector3(0f, overlapY, 0f);
+                velocityY = 0f;
+                isGrounded = true;
+            }
+            else
+            {
+                transform.position -= new Vector3(0f, overlapY, 0f);
+                velocityY = Mathf.Min(velocityY, 0f);
+            }
         }
+        else
+        {
+            float direction = myCenterX > theirCenterX ? 1f : -1f;
+            transform.position += new Vector3(overlapX * direction, 0f, 0f);
+        }
+
+        player.Recalculate();
     }
 }
