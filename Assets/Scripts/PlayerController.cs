@@ -1,69 +1,73 @@
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour, ICollidable
+[RequireComponent(typeof(PerspectiveObject))]
+public class PlayerController : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 2f;
-    [SerializeField] private float jumpHeight = 3f;
-    [SerializeField] private float gravity = -9.8f;
+    [Header("Lanes")]
+    [SerializeField] private float laneSmoothTime = 0.1f; // lower = snappier
 
-    private float velocityY = 0f;
-    private bool isGrounded = false;
+    [Header("Jump")]
+    [SerializeField] private float groundY = -3f;
+    [SerializeField] private float jumpVelocity = 9f;
+    [SerializeField] private float gravity = 30f;
 
-    public AABBCollider Collider { get; private set; }
+    public PerspectiveObject Perspective { get; private set; }
+    public int CurrentLane { get; private set; } = 1;   // start in the middle
+    public float Height => Perspective.position.y - groundY; // 0 when on the ground
+    public bool IsGrounded => Height <= 0.001f;
 
-    void Awake() => Collider = GetComponent<AABBCollider>();
-    void OnEnable() => CollisionManager.Register(this);
-    void OnDisable() => CollisionManager.Unregister(this);
+    private float velocityX;   // SmoothDamp's internal state
+    private float velocityY;
 
-    void Update()
+    private void Awake()
     {
-        float horizontalInput = Input.GetAxisRaw("Horizontal");
-        transform.position += new Vector3(horizontalInput * moveSpeed * Time.deltaTime, 0f, 0f);
-
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
-            velocityY = Mathf.Sqrt(jumpHeight * -2f * gravity);
-
-        velocityY += gravity * Time.deltaTime;
-        transform.position += new Vector3(0f, velocityY * Time.deltaTime, 0f);
-
-        isGrounded = false;
+        Perspective = GetComponent<PerspectiveObject>();
+        Perspective.position = new Vector3(Lanes.GetX(CurrentLane), groundY, 0f);
     }
 
-    public void OnColliderEnter(ICollidable other)
+    private void Update()
     {
-        if (other is not SolidObject) return;
+        ReadInput();
+        MoveBetweenLanes();
+        ApplyJump();
+    }
 
-        AABBCollider player = Collider;
-        AABBCollider otherCollider = other.Collider;
+    private void ReadInput()
+    {
+        if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A))
+            CurrentLane = Mathf.Max(CurrentLane - 1, 0);
 
-        float overlapX = Mathf.Min(player.max.x, otherCollider.max.x) - Mathf.Max(player.min.x, otherCollider.min.x);
-        float overlapY = Mathf.Min(player.max.y, otherCollider.max.y) - Mathf.Max(player.min.y, otherCollider.min.y);
+        if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D))
+            CurrentLane = Mathf.Min(CurrentLane + 1, Lanes.Count - 1);
 
-        float myCenterX = (player.min.x + player.max.x) * 0.5f;
-        float myCenterY = (player.min.y + player.max.y) * 0.5f;
-        float theirCenterX = (otherCollider.min.x + otherCollider.max.x) * 0.5f;
-        float theirCenterY = (otherCollider.min.y + otherCollider.max.y) * 0.5f;
+        if ((Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) && IsGrounded)
+            velocityY = jumpVelocity;
+    }
 
-        if (overlapY < overlapX)
+    private void MoveBetweenLanes()
+    {
+        float targetX = Lanes.GetX(CurrentLane);
+        Perspective.position.x = Mathf.SmoothDamp(
+            Perspective.position.x, targetX, ref velocityX, laneSmoothTime);
+    }
+
+    private void ApplyJump()
+    {
+        // Only integrate physics while airborne or just launched.
+        if (IsGrounded && velocityY <= 0f)
         {
-            if (myCenterY > theirCenterY)
-            {
-                transform.position += new Vector3(0f, overlapY, 0f);
-                velocityY = 0f;
-                isGrounded = true;
-            }
-            else
-            {
-                transform.position -= new Vector3(0f, overlapY, 0f);
-                velocityY = Mathf.Min(velocityY, 0f);
-            }
-        }
-        else
-        {
-            float direction = myCenterX > theirCenterX ? 1f : -1f;
-            transform.position += new Vector3(overlapX * direction, 0f, 0f);
+            velocityY = 0f;
+            Perspective.position.y = groundY;
+            return;
         }
 
-        player.Recalculate();
+        velocityY -= gravity * Time.deltaTime;
+        Perspective.position.y += velocityY * Time.deltaTime;
+
+        if (Perspective.position.y <= groundY)
+        {
+            Perspective.position.y = groundY;
+            velocityY = 0f;
+        }
     }
 }

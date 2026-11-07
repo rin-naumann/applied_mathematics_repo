@@ -1,50 +1,74 @@
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class CollisionManager : MonoBehaviour
 {
-    public static CollisionManager Instance { get; private set; }
+    public static CollisionManager Instance => instance;
+    private static CollisionManager instance;
 
-    private static readonly List<ICollidable> collidables = new List<ICollidable>();
+    private List<AABBCollider> colliders = new();
 
     private void Awake()
     {
-        if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); }
-        else Destroy(gameObject);
-    }
-
-    public static void Register(ICollidable collidable)
-    {
-        if (collidables.Contains(collidable)) return;
-        collidables.Add(collidable);
-    }
-
-    public static void Unregister(ICollidable collidable)
-    {
-        collidables.Remove(collidable);
-    }
-
-    void LateUpdate()
-    {
-        for (int i = 0; i < collidables.Count; i++)
-            collidables[i].Collider.Recalculate();
-
-        for (int i = 0; i < collidables.Count; i++)
+        if (instance == null)
         {
-            for (int j = i + 1; j < collidables.Count; j++)
-            {
-                var a = collidables[i];
-                var b = collidables[j];
-                if (!Overlaps(a, b)) continue;
-                a.OnColliderEnter(b);
-                b.OnColliderEnter(a);
-            }
+            instance = this;
+            DontDestroyOnLoad(this);
+        }
+        else
+        {
+            Destroy(this);
         }
     }
 
-    bool Overlaps(ICollidable a, ICollidable b)
+    public void Register(AABBCollider collider)
     {
-        return a.Collider.min.x < b.Collider.max.x && a.Collider.max.x > b.Collider.min.x &&
-               a.Collider.min.y < b.Collider.max.y && a.Collider.max.y > b.Collider.min.y;
+        if (colliders.Contains(collider)) return;
+        colliders.Add(collider);
+    }
+    
+    public void Unregister(AABBCollider collider)
+    {
+        if (!colliders.Contains(collider)) return;
+        colliders.Remove(collider);
+    }
+
+    private void LateUpdate()
+    {
+        for (int i = 0; i < colliders.Count; i++)
+        {
+            var colliderA = colliders[i];
+            for (int j = i + 1; j < colliders.Count; j++)
+            {
+                var colliderB = colliders[j];
+                if (Overlaps(colliderA, colliderB))
+                {
+                    colliderA.OnCollision(colliderB);
+                    colliderB.OnCollision(colliderA);
+                }
+            }
+        }
+
+        for (int i = 0; i < colliders.Count; i++)
+        {
+            colliders[i].RecordZ();
+        }
+    }
+
+    bool Overlaps(AABBCollider a, AABBCollider b)
+    {
+        if (!a.HasPreviousZ || !b.HasPreviousZ) return false; // first frame: nothing to compare against
+
+        return CrossedInZ(a, b) &&
+            a.min.x <= b.max.x && b.min.x <= a.max.x &&
+            a.min.y <= b.max.y && b.min.y <= a.max.y;
+    }
+
+    // True only on the frame where the z-gap between a and b changes sign (or reaches zero).
+    bool CrossedInZ(AABBCollider a, AABBCollider b)
+    {
+        float before = a.PreviousZ - b.PreviousZ;
+        float now = a.Z - b.Z;
+        return (before > 0f && now <= 0f) || (before < 0f && now >= 0f);
     }
 }
